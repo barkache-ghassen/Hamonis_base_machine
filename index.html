@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Hamonis VNC</title>
+
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #000;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      /* Disable text selection */
+      body {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+    </style>
+
+    <script>
+      // -------------------------------------
+      // Disable Right-Click Entirely
+      // -------------------------------------
+      document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      // -------------------------------------
+      // Disable F12, Ctrl+Shift+I/J/C/U, Ctrl+U
+      // -------------------------------------
+      document.addEventListener("keydown", function (e) {
+        // F12
+        if (e.key === "F12") {
+          e.preventDefault();
+        }
+
+        // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
+        if (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) {
+          e.preventDefault();
+        }
+
+        // Ctrl+U (view source)
+        if (e.ctrlKey && e.key.toUpperCase() === "U") {
+          e.preventDefault();
+        }
+      });
+
+      // -------------------------------------
+      // Disable dragging (image drag, iframe drag, etc.)
+      // -------------------------------------
+      document.addEventListener("dragstart", (e) => e.preventDefault());
+    </script>
+  </head>
+
+  <body>
+    <iframe
+      src="hiddenvnc-43950.html?resize=scale&autoconnect=true"
+      id="novnc_frame"
+    ></iframe>
+  </body>
+</html>

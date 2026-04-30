@@ -1,5 +1,5 @@
 ```
-#web3-hamnis
+#web3-hamonis
 
 
 docker build -t hamonis:base .

@@ -25,7 +25,7 @@ Challenge-specific dependencies only
 
 # ⚡ Dynamic Challenge Launcher
 
-start_challenge.sh now dynamically detects and launches the challenge runner script.
+`start_challenge.sh` now dynamically detects and launches the challenge runner script.
 
 Instead of hardcoded filenames, the system automatically searches for executable bash challenge files.
 
@@ -40,7 +40,7 @@ This keeps the base machine lightweight and modular.
 
 # 🧠 New Startup Flow
 
-start.sh now fully initializes the environment automatically.
+`start.sh` now fully initializes the environment automatically.
 
 Startup Sequence
 ```
@@ -63,8 +63,8 @@ The project now follows a more modular design:
 Component	Responsibility
 Base Machine	Generic runtime environment
 Challenge Package	Dependencies + logic
-start.sh	Machine orchestration
-start_challenge.sh	Dynamic challenge execution
+`start.sh`	Machine orchestration
+`start_challenge.sh`	Dynamic challenge execution
 
 # 🔥 Result
 

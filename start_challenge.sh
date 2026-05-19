@@ -1,13 +1,13 @@
 #!/bin/bash
-
 # ── Auto-detect challenge directory ──────────────────────────────────────────
 SEARCH_ROOTS=("/root" "/home" "/opt" "/srv" "/app")
 RUN_SCRIPT=""
 CHALLENGE_DIR=""
 
 for root in "${SEARCH_ROOTS[@]}"; do
-    # Find the first executable .sh file inside any subdirectory
-    found=$(find "$root" -maxdepth 3 -name "*.sh" -type f -perm /111 2>/dev/null | head -n 1)
+    found=$(find "$root" -maxdepth 3 -name "*.sh" -type f -perm /111 2>/dev/null \
+        | grep -v "start_challenge.sh\|start.sh\|xstartup\|vnc-autostart.sh" \
+        | head -n 1)
     if [ -n "$found" ]; then
         RUN_SCRIPT=$(basename "$found")
         CHALLENGE_DIR=$(dirname "$found")
@@ -17,7 +17,9 @@ done
 
 # Fallback: check current working directory
 if [ -z "$CHALLENGE_DIR" ]; then
-    found=$(find "$(pwd)" -maxdepth 1 -name "*.sh" -type f -perm /111 2>/dev/null | head -n 1)
+    found=$(find "$(pwd)" -maxdepth 1 -name "*.sh" -type f -perm /111 2>/dev/null \
+        | grep -v "start_challenge.sh\|start.sh\|xstartup\|vnc-autostart.sh" \
+        | head -n 1)
     if [ -n "$found" ]; then
         RUN_SCRIPT=$(basename "$found")
         CHALLENGE_DIR=$(pwd)
@@ -30,7 +32,6 @@ if [ -z "$CHALLENGE_DIR" ] || [ -z "$RUN_SCRIPT" ]; then
 fi
 
 LOG="${CHALLENGE_DIR}/challenge.log"
-# ─────────────────────────────────────────────────────────────────────────────
 
 echo "=================================================="
 echo "Starting Challenge services"
@@ -43,11 +44,8 @@ cd "$CHALLENGE_DIR" || {
     exit 1
 }
 
-# Install node deps if needed
-if [ -f package.json ] && [ ! -d node_modules ]; then
-    echo "[*] Installing dependencies..."
-    npm ci --silent || echo "[!] npm install failed (continuing)"
-fi
+# Clean npm cache before handing off to run_challenge.sh
+rm -rf /root/.npm/_cacache
 
 # Start challenge
 chmod +x "./$RUN_SCRIPT"

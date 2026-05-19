@@ -26,12 +26,21 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-instal
     libstdc++6 libuuid1 \
     curl wget git nano sudo net-tools \
     python3 python3-venv \
-    nodejs npm \
-    # build-essential \
+    #This module is not supported, and leaks memory. Do not use it.  uncomment install Node.js 
+    nodejs npm\ 
     firefox-esr \
     papirus-icon-theme \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
+# # ──Install Node.js 22 from NodeSource ──────────────────────────────────────────
+# RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+#     && apt-get install --no-install-recommends -y nodejs \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/* \
+#     && node --version \
+#     && npm --version
 
 # ── Install renamed/transitional packages with fallbacks (Debian 13 t64 ABI) ─
 RUN apt-get update && \

@@ -23,7 +23,7 @@ Faster builds
 Lower storage usage
 Challenge-specific dependencies only
 
-# ⚡Dynamic Challenge Launcher
+# ⚡ Dynamic Challenge Launcher
 
 start_challenge.sh now dynamically detects and launches the challenge runner script.
 
@@ -80,7 +80,7 @@ start_challenge.sh	Dynamic challenge execution
 
 # 📦 Recommended Challenge Structure
 ```
-──Challenge_Name_file
+├──Challenge_Name_file
     ├──Dockerfile
     ├── challenge/
     ├── challenge_files/

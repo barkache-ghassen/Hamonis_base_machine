@@ -83,8 +83,8 @@ start_challenge.sh	Dynamic challenge execution
 ├──Challenge_Name_file
     ├──Dockerfile
     ├── challenge/
-    ├── challenge_files/
-    └── run_challenge.sh
+        ├── challenge_files/
+        └── run_challenge.sh
 ```
 
 

@@ -28,7 +28,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-instal
     python3 python3-venv \
     #This module is not supported, and leaks memory. Do not use it.  uncomment install Node.js 
     nodejs npm\ 
-    #uncomment if you need to compile native modules for go/rust
+    #uncomment build-essential if you need to compile native modules for go/rust
     # build-essential \ 
     firefox-esr \
     papirus-icon-theme \

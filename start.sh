@@ -132,28 +132,12 @@ done
 echo "[✓] noVNC ready on port 8080 (waited ${ELAPSED}s)"
 
 # ---------------------------------------
-# Start challenge (auto-detect)
+# calling the Start challenge (auto-detect)
 # ---------------------------------------
-SEARCH_ROOTS=("/root" "/home" "/opt" "/srv" "/app")
-RUN_SCRIPT=""
-CHALLENGE_DIR=""
-
-for root in "${SEARCH_ROOTS[@]}"; do
-    found=$(find "$root" -maxdepth 3 -name "*.sh" -type f -perm /111 2>/dev/null \
-        | grep -v "vnc-autostart.sh\|start.sh\|start_challenge.sh\|xstartup" \
-        | head -n 1)
-    if [ -n "$found" ]; then
-        RUN_SCRIPT=$(basename "$found")
-        CHALLENGE_DIR=$(dirname "$found")
-        break
-    fi
-done
-
-if [ -n "$CHALLENGE_DIR" ] && [ -n "$RUN_SCRIPT" ]; then
-    echo "[*] Found challenge: $CHALLENGE_DIR/$RUN_SCRIPT"
-    bash "$CHALLENGE_DIR/$RUN_SCRIPT" &
+if [ -f /root/start_challenge.sh ]; then
+    bash /root/start_challenge.sh &
 else
-    echo "[!] No challenge script found, skipping."
+    echo "[!] start_challenge.sh not found, skipping."
 fi
 
 # ---------------------------------------

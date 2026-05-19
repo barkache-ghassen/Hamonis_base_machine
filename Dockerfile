@@ -27,7 +27,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-instal
     curl wget git nano sudo net-tools \
     python3 python3-venv \
     nodejs npm \
-    build-essential \
+    # build-essential \
     firefox-esr \
     papirus-icon-theme \
     && apt-get clean \

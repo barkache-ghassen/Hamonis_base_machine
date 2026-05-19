@@ -2,12 +2,15 @@
 
 A cleaner, lighter, and more dynamic challenge environment setup.
 
+from 5.6 GB to 2.97 GB
+
 1️⃣ Rust & Go Removed from Base Image
 
 To reduce Docker image size and improve deployment efficiency:
 
 Rust ❌
 Go ❌
+build-essential ❌
 
 are no longer pre-installed in the base machine.
 
@@ -61,14 +64,15 @@ Base Machine	Generic runtime environment
 Challenge Package	Dependencies + logic
 start.sh	Machine orchestration
 start_challenge.sh	Dynamic challenge execution
+
 # 🔥 Result
 
-✅ Smaller images
-✅ Faster deployment
-✅ Easier scaling
-✅ Better maintainability
-✅ Cleaner challenge packaging
-✅ More professional infrastructure
+-✅ Smaller images
+-✅ Faster deployment
+-✅ Easier scaling
+-✅ Better maintainability
+-✅ Cleaner challenge packaging
+-✅ More professional infrastructure
 
 # 📦 Recommended Challenge Structure
 ```

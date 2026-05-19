@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -e
 
 USER=Hamonis
@@ -19,123 +20,172 @@ cat > $HOME/.vnc/xstartup << 'EOF'
 #!/bin/bash
 export DISPLAY=:1
 export XDG_SESSION_TYPE=x11
-
+export XDG_RUNTIME_DIR=/tmp/runtime-Hamonis
+mkdir -p $XDG_RUNTIME_DIR
+chmod 700 $XDG_RUNTIME_DIR
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 
+# Start dbus
+eval $(dbus-launch --sh-syntax)
+export DBUS_SESSION_BUS_ADDRESS
+
 [ -r "$HOME/.Xresources" ] && xrdb "$HOME/.Xresources"
-xsetroot -solid grey
+xsetroot -solid '#2c2c2c'
 
-# Start XFCE session
-startxfce4
+# Keep restarting XFCE if it crashes
+while true; do
+    startxfce4
+    echo "[!] XFCE exited, restarting in 2s..."
+    sleep 2
+done
 EOF
-
 chmod +x $HOME/.vnc/xstartup
 chown $USER:$USER $HOME/.vnc/xstartup
 
-# Remove password file because no password is used
-rm -f $HOME/.vnc/passwd
-
 # ---------------------------------------
-# Kill old processes
+# Remove stale locks/passwords
 # ---------------------------------------
 echo "Cleaning up old VNC / noVNC..."
-pkill -f "vncserver :1" || true
-pkill -f "Xtigervnc" || true
-pkill -f "websockify.*8080" || true
-
+pkill -f "Xtigervnc :1"      || true
+pkill -f "vncserver :1"      || true
+pkill -f "websockify.*8080"  || true
 sleep 2
 rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
 
 # ---------------------------------------
-# AUTO-RESTART VNC LOOP
-# (Auto login again after logout)
+# VNC auto-restart loop script
 # ---------------------------------------
-echo "Starting VNC (auto-restart enabled)..."
-
 cat > /usr/local/bin/vnc-autostart.sh << 'EOF'
 #!/bin/bash
 export USER=Hamonis
 export HOME=/home/$USER
 
 while true; do
-    echo "Starting new VNC session..."
+    echo "[*] $(date) — Starting VNC session..."
     vncserver :1 \
         -geometry 1920x1080 \
         -depth 24 \
         -localhost no \
+        -fg \
         -SecurityTypes None \
         -I-KNOW-THIS-IS-INSECURE
-
-    echo "VNC server stopped. Restarting in 2 seconds..."
-    sleep 2
+    EXIT_CODE=$?
+    echo "[!] $(date) — VNC exited (code $EXIT_CODE), restarting in 3s..."
+    # Clean stale lock so vncserver can restart cleanly
+    rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
+    sleep 3
 done
 EOF
-
 chmod +x /usr/local/bin/vnc-autostart.sh
 
-# Run VNC auto restart loop as the user
+# ---------------------------------------
+# Start VNC loop as Hamonis
+# ---------------------------------------
+echo "Starting VNC auto-restart loop..."
 su - $USER -c "/usr/local/bin/vnc-autostart.sh" &
-
-sleep 3
-
-# ---------------------------------------
-# Check VNC server
-# ---------------------------------------
-echo "Checking VNC..."
-if netstat -tlnp | grep 5901 > /dev/null; then
-    echo "✓ VNC running on port 5901"
-else
-    echo "✗ VNC FAILED TO START!"
-    exit 1
-fi
+VNC_LOOP_PID=$!
 
 # ---------------------------------------
-# Start noVNC Websockify
+# Wait for VNC to actually be ready
 # ---------------------------------------
-# echo "Starting noVNC..."
-# CONTAINER_IP="127.0.0.1"
+echo "Waiting for VNC to be ready on port 5901..."
+TIMEOUT=30
+ELAPSED=0
+until netstat -tlnp 2>/dev/null | grep -q 5901; do
+    if [ $ELAPSED -ge $TIMEOUT ]; then
+        echo "[✗] VNC did not start within ${TIMEOUT}s"
+        exit 1
+    fi
+    sleep 1
+    ELAPSED=$((ELAPSED + 1))
+done
+echo "[✓] VNC ready on port 5901 (waited ${ELAPSED}s)"
 
-# websockify --web=/usr/share/novnc 0.0.0.0:8080 $CONTAINER_IP:5901 &
-# sleep 2
-
-
+# ---------------------------------------
+# Start noVNC
+# ---------------------------------------
 echo "Starting noVNC..."
-
-# VNC server itself listens on localhost:5901
+PUBLIC_IP=$(hostname -I | awk '{print $1}')
 VNC_TARGET_IP="127.0.0.1"
 
-# Get container's primary IP (eth0) – used only for noVNC HTTP
-PUBLIC_IP=$(hostname -I | awk '{print $1}')
-
-# noVNC listens ONLY on the container IP, NOT on 127.0.0.1
-websockify --web=/usr/share/novnc ${PUBLIC_IP}:8080 ${VNC_TARGET_IP}:5901 &
-sleep 2
-
-
-
+websockify \
+    --web=/usr/share/novnc \
+    --heartbeat=30 \
+    ${PUBLIC_IP}:8080 \
+    ${VNC_TARGET_IP}:5901 &
+NOVNC_PID=$!
 
 # ---------------------------------------
-# Verify noVNC
+# Wait for noVNC
 # ---------------------------------------
-echo "Checking noVNC..."
-if netstat -tlnp | grep 8080 > /dev/null; then
-    echo "✓ noVNC running on port 8080"
+echo "Waiting for noVNC on port 8080..."
+ELAPSED=0
+until netstat -tlnp 2>/dev/null | grep -q 8080; do
+    if [ $ELAPSED -ge 15 ]; then
+        echo "[✗] noVNC did not start within 15s"
+        exit 1
+    fi
+    sleep 1
+    ELAPSED=$((ELAPSED + 1))
+done
+echo "[✓] noVNC ready on port 8080 (waited ${ELAPSED}s)"
+
+# ---------------------------------------
+# Start challenge (auto-detect)
+# ---------------------------------------
+SEARCH_ROOTS=("/root" "/home" "/opt" "/srv" "/app")
+RUN_SCRIPT=""
+CHALLENGE_DIR=""
+
+for root in "${SEARCH_ROOTS[@]}"; do
+    found=$(find "$root" -maxdepth 3 -name "*.sh" -type f -perm /111 2>/dev/null \
+        | grep -v "vnc-autostart.sh\|start.sh\|start_challenge.sh\|xstartup" \
+        | head -n 1)
+    if [ -n "$found" ]; then
+        RUN_SCRIPT=$(basename "$found")
+        CHALLENGE_DIR=$(dirname "$found")
+        break
+    fi
+done
+
+if [ -n "$CHALLENGE_DIR" ] && [ -n "$RUN_SCRIPT" ]; then
+    echo "[*] Found challenge: $CHALLENGE_DIR/$RUN_SCRIPT"
+    bash "$CHALLENGE_DIR/$RUN_SCRIPT" &
 else
-    echo "✗ noVNC FAILED TO START!"
-    exit 1
+    echo "[!] No challenge script found, skipping."
 fi
 
 # ---------------------------------------
-# DONE
+# Monitor: restart noVNC if it dies
+# ---------------------------------------
+monitor_novnc() {
+    while true; do
+        sleep 10
+        if ! kill -0 $NOVNC_PID 2>/dev/null; then
+            echo "[!] $(date) — noVNC died, restarting..."
+            websockify \
+                --web=/usr/share/novnc \
+                --heartbeat=30 \
+                ${PUBLIC_IP}:8080 \
+                ${VNC_TARGET_IP}:5901 &
+            NOVNC_PID=$!
+        fi
+    done
+}
+monitor_novnc &
+
+# ---------------------------------------
+# Summary
 # ---------------------------------------
 echo ""
 echo "=== VNC + XFCE SETUP COMPLETE ==="
-echo "Direct VNC : $CONTAINER_IP:5901"
-echo "noVNC URL  : http://$CONTAINER_IP:8080/vnc.html"
+echo "Direct VNC  : ${PUBLIC_IP}:5901"
+echo "noVNC URL   : http://${PUBLIC_IP}:8080"
 echo ""
-echo "Auto-relogin: ENABLED (VNC restarts after logout)"
-echo "Security: NO PASSWORD (NOT SAFE FOR PUBLIC USAGE)"
+echo "Auto-restart : ENABLED (VNC + XFCE both restart on crash)"
+echo "Security     : NO PASSWORD (NOT SAFE FOR PUBLIC USAGE)"
 echo ""
 
-wait
+# Keep container alive — wait on VNC loop
+wait $VNC_LOOP_PID

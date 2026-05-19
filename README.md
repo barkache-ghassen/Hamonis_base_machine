@@ -1,8 +1,7 @@
-🚀 Project Update Overview
+# 🚀 Project Update Overview
 
 A cleaner, lighter, and more dynamic challenge environment setup.
 
-✨ What's New
 1️⃣ Rust & Go Removed from Base Image
 
 To reduce Docker image size and improve deployment efficiency:
@@ -26,8 +25,6 @@ start_challenge.sh now dynamically detects and launches the challenge runner scr
 
 Instead of hardcoded filenames, the system automatically searches for executable bash challenge files.
 
-Example
-run_challenge
 
 The challenge package itself now contains:
 
@@ -82,14 +79,7 @@ challenge/
 ├── run_challenge
 └── challenge_files/
 ```
-# 🛠️ Migration Notes
 
-Older challenges may require:
-
-Moving dependency installation into the challenge itself
-Adding a launcher file like:
-run_challenge
-Uncommenting Rust/Go installation if needed
 
 
 ```

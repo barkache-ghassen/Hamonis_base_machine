@@ -25,7 +25,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-instal
     libxkbfile1 libsecret-1-0 libxss1 \
     libstdc++6 libuuid1 \
     curl wget git nano sudo net-tools \
-    python3 python3-venv \
+    python3 python3-pip python3-venv \
     #This module is not supported, and leaks memory. Do not use it.  uncomment install Node.js 
     nodejs npm\ 
     #uncomment build-essential if you need to compile native modules for go/rust 

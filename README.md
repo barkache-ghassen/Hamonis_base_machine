@@ -2,7 +2,7 @@
 
 A cleaner, lighter, and more dynamic challenge environment setup.
 
-from 5.6 GB to 2.97 GB
+from 5.6 GB to 3.6 GB
 
 1️⃣ Rust & Go Removed from Base Image
 
